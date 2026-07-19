@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { Loader2, Mic, MicOff } from "lucide-react";
+import { finalizeJobSpecAction } from "@/actions/finalizeSpec";
+import { FinalSpecCard } from "@/components/ui/FinalSpecCard";
+import type { JobSpecRecord } from "@/lib/final-job-spec";
+import type { JobSpec } from "@/lib/job-spec";
 
-function VoiceInterviewPanel() {
+const MOCK_VOICE_SUMMARY = "User stated there are 2 flights of stairs";
+
+type VoiceInterviewProps = {
+  jobSpec: JobSpec;
+  isDemoMode: boolean;
+};
+
+function VoiceInterviewPanel({ jobSpec, isDemoMode }: VoiceInterviewProps) {
   const conversation = useConversation();
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [finalizeError, setFinalizeError] = useState<string | null>(null);
+  const [finalRecord, setFinalRecord] = useState<JobSpecRecord | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   async function startConversation() {
     setPermissionError(null);
@@ -27,6 +41,50 @@ function VoiceInterviewPanel() {
 
   function endConversation() {
     conversation.endSession();
+  }
+
+  function handleEndCallAndFinalize() {
+    if (conversation.status === "connected") {
+      conversation.endSession();
+    }
+
+    setFinalizeError(null);
+
+    startTransition(async () => {
+      const result = await finalizeJobSpecAction(
+        jobSpec,
+        MOCK_VOICE_SUMMARY,
+        isDemoMode,
+      );
+
+      if (result.success) {
+        setFinalRecord(result.data);
+      } else {
+        setFinalizeError(result.error);
+      }
+    });
+  }
+
+  if (finalRecord) {
+    return <FinalSpecCard record={finalRecord} />;
+  }
+
+  if (isPending) {
+    return (
+      <div
+        className="flex flex-col items-center gap-3 rounded-xl border border-border bg-secondary/20 px-6 py-10"
+        role="status"
+        aria-live="polite"
+      >
+        <Loader2
+          className="size-8 animate-spin text-primary"
+          aria-hidden="true"
+        />
+        <p className="animate-pulse text-sm font-medium text-foreground">
+          Compiling Immutable Job Spec...
+        </p>
+      </div>
+    );
   }
 
   const { status, isSpeaking, isListening } = conversation;
@@ -89,17 +147,28 @@ function VoiceInterviewPanel() {
         </div>
       ) : null}
 
+      <button
+        type="button"
+        onClick={handleEndCallAndFinalize}
+        className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-3 text-sm font-semibold text-primary shadow-sm transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
+        End Call & Finalize
+      </button>
+
       {permissionError ? (
         <p className="text-sm text-primary">{permissionError}</p>
+      ) : null}
+      {finalizeError ? (
+        <p className="text-sm text-primary">{finalizeError}</p>
       ) : null}
     </div>
   );
 }
 
-export function VoiceInterview() {
+export function VoiceInterview({ jobSpec, isDemoMode }: VoiceInterviewProps) {
   return (
     <ConversationProvider>
-      <VoiceInterviewPanel />
+      <VoiceInterviewPanel jobSpec={jobSpec} isDemoMode={isDemoMode} />
     </ConversationProvider>
   );
 }

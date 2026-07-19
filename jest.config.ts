@@ -11,6 +11,7 @@ const config: Config = {
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
     "^@elevenlabs/react$": "<rootDir>/__mocks__/elevenlabs-react.tsx",
   },
 };

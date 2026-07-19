@@ -21,16 +21,28 @@ function isAcceptedFile(file: File) {
 
 type FileUploadZoneProps = {
   onJobSpecChange?: (jobSpec: JobSpec | null) => void;
+  isDemoMode?: boolean;
+  onDemoModeChange?: (isDemoMode: boolean) => void;
 };
 
-export function FileUploadZone({ onJobSpecChange }: FileUploadZoneProps = {}) {
+export function FileUploadZone({
+  onJobSpecChange,
+  isDemoMode: controlledDemoMode,
+  onDemoModeChange,
+}: FileUploadZoneProps = {}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [uncontrolledDemoMode, setUncontrolledDemoMode] = useState(true);
+  const isDemoMode = controlledDemoMode ?? uncontrolledDemoMode;
   const [jobSpec, setJobSpec] = useState<JobSpec | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  function setIsDemoMode(next: boolean) {
+    setUncontrolledDemoMode(next);
+    onDemoModeChange?.(next);
+  }
 
   function updateJobSpec(next: JobSpec | null) {
     setJobSpec(next);

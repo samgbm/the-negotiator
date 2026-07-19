@@ -2,9 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdf-parse"],
-  serverActions: {
+  experimental: {
     // Inventory PDFs routinely exceed the 1MB default
-    bodySizeLimit: "10mb",
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
   },
 };
 
