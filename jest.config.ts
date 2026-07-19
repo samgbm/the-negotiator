@@ -10,6 +10,9 @@ const config: Config = {
   coverageProvider: "v8",
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  moduleNameMapper: {
+    "^@elevenlabs/react$": "<rootDir>/__mocks__/elevenlabs-react.tsx",
+  },
 };
 
 export default createJestConfig(config);

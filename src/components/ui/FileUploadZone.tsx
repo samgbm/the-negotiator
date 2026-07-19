@@ -19,7 +19,11 @@ function isAcceptedFile(file: File) {
   return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
 }
 
-export function FileUploadZone() {
+type FileUploadZoneProps = {
+  onJobSpecChange?: (jobSpec: JobSpec | null) => void;
+};
+
+export function FileUploadZone({ onJobSpecChange }: FileUploadZoneProps = {}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -27,6 +31,11 @@ export function FileUploadZone() {
   const [jobSpec, setJobSpec] = useState<JobSpec | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  function updateJobSpec(next: JobSpec | null) {
+    setJobSpec(next);
+    onJobSpecChange?.(next);
+  }
 
   function runExtraction(selectedFile: File) {
     if (selectedFile.size > MAX_FILE_BYTES) {
@@ -37,14 +46,14 @@ export function FileUploadZone() {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    setJobSpec(null);
+    updateJobSpec(null);
     setError(null);
 
     startTransition(async () => {
       try {
         const result = await extractJobSpecAction(formData, isDemoMode);
         if (result.success) {
-          setJobSpec(result.data);
+          updateJobSpec(result.data);
         } else {
           setError(result.error.message);
         }
@@ -89,7 +98,7 @@ export function FileUploadZone() {
 
   function handleRemove() {
     setFile(null);
-    setJobSpec(null);
+    updateJobSpec(null);
     setError(null);
     if (inputRef.current) {
       inputRef.current.value = "";

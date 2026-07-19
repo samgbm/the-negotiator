@@ -1,4 +1,4 @@
-import { FileUploadZone } from "@/components/ui/FileUploadZone";
+import { DocumentIntake } from "@/components/DocumentIntake";
 
 export default function Home() {
   return (
@@ -15,7 +15,7 @@ export default function Home() {
           </p>
         </div>
 
-        <FileUploadZone />
+        <DocumentIntake />
       </div>
     </main>
   );
